@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识笔记本</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📒</text></svg>">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ 侧边栏 ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="brand-icon">📒</span>
+      <span class="brand-name">知识笔记本</span>
+      <button class="icon-btn sidebar-close" id="sidebarClose" title="收起侧栏">✕</button>
+    </div>
+
+    <button class="btn-primary new-btn" id="newBtn">
+      <span>＋</span> 新建笔记
+    </button>
+
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">全部</div>
+        <a class="nav-item active" data-filter="all" href="#">
+          <span class="nav-ico">🗂️</span>
+          <span class="nav-text">所有笔记</span>
+          <span class="nav-count" id="countAll">0</span>
+        </a>
+        <a class="nav-item" data-filter="pinned" href="#">
+          <span class="nav-ico">📌</span>
+          <span class="nav-text">置顶</span>
+          <span class="nav-count" id="countPinned">0</span>
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">
+          分类
+          <button class="mini-btn" id="addCategoryBtn" title="新建分类">＋</button>
+        </div>
+        <div id="categoryList"></div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">常用标签</div>
+        <div class="tagcloud" id="tagCloud"></div>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="ghost-btn" id="exportBtn" title="导出全部笔记为 JSON">⬇ 导出</button>
+      <button class="ghost-btn" id="importBtn" title="从 JSON 文件导入">⬆ 导入</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </aside>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- ============ 主区域 ============ -->
+  <main class="main">
+
+    <header class="topbar">
+      <button class="icon-btn menu-btn" id="menuBtn" title="展开侧栏">☰</button>
+
+      <div class="search-wrap">
+        <span class="search-ico">🔍</span>
+        <input
+          id="searchInput"
+          class="search-input"
+          type="search"
+          placeholder="搜索标题、正文、标签…（空格分隔多个关键词）"
+          autocomplete="off">
+        <button class="icon-btn clear-btn" id="clearSearch" title="清空">✕</button>
+      </div>
+
+      <div class="sort-wrap">
+        <select id="sortSelect" class="select" title="排序方式">
+          <option value="updated">最近修改</option>
+          <option value="created">创建时间</option>
+          <option value="title">标题排序</option>
+        </select>
+      </div>
+
+      <button class="icon-btn theme-btn" id="themeBtn" title="切换白天 / 黑夜模式">🌙</button>
+    </header>
+
+    <div class="list-head">
+      <h2 id="listTitle">所有笔记</h2>
+      <span class="list-meta" id="listMeta">0 条</span>
+    </div>
+
+    <section class="list" id="list"></section>
+
+    <div class="empty" id="empty" hidden>
+      <div class="empty-ico">🗒️</div>
+      <p class="empty-title">还没有内容</p>
+      <p class="empty-sub">点击「新建笔记」开始记录你的第一个想法</p>
+    </div>
+  </main>
+
+</div>
+
+<!-- ============ 编辑抽屉 ============ -->
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer" id="drawer">
+  <header class="drawer-head">
+    <h3 id="drawerTitle">新建笔记</h3>
+    <button class="icon-btn" id="drawerClose" title="关闭">✕</button>
+  </header>
+
+  <div class="drawer-body">
+    <label class="field">
+      <span class="field-label">标题 <em>*</em></span>
+      <input id="fTitle" class="input" type="text" placeholder="给这条笔记起个名字" maxlength="200">
+    </label>
+
+    <div class="field-row">
+      <label class="field">
+        <span class="field-label">分类</span>
+        <select id="fCategory" class="select block"></select>
+      </label>
+      <label class="field">
+        <span class="field-label">标签</span>
+        <input id="fTags" class="input" type="text" placeholder="用逗号分隔，如：读书, 摘要">
+      </label>
+    </div>
+
+    <label class="field grow">
+      <span class="field-label">
+        正文
+        <span class="counter" id="charCount">0 字</span>
+      </span>
+      <textarea id="fContent" class="textarea" placeholder="在这里写下内容…&#10;&#10;支持多段落，输入时会自动保存草稿。"></textarea>
+    </label>
+
+    <label class="switch-row">
+      <input type="checkbox" id="fPinned">
+      <span class="switch-ui"></span>
+      <span>置顶这条笔记</span>
+    </label>
+
+    <div class="related" id="relatedBox" hidden>
+      <div class="related-label">相关笔记</div>
+      <div id="relatedList"></div>
+    </div>
+  </div>
+
+  <footer class="drawer-foot">
+    <button class="danger-btn" id="deleteBtn" hidden>删除</button>
+    <div class="spacer"></div>
+    <button class="ghost-btn" id="cancelBtn">取消</button>
+    <button class="btn-primary" id="saveBtn">保存</button>
+  </footer>
+</aside>
+
+<!-- ============ 阅读视图 ============ -->
+<div class="modal-mask" id="viewMask">
+  <article class="modal" id="viewModal">
+    <header class="modal-head">
+      <div>
+        <h3 id="viewTitle"></h3>
+        <div class="modal-meta" id="viewMeta"></div>
+      </div>
+      <button class="icon-btn" id="viewClose" title="关闭">✕</button>
+    </header>
+    <div class="modal-body" id="viewBody"></div>
+    <footer class="modal-foot">
+      <button class="danger-btn" id="viewDelete">删除</button>
+      <div class="spacer"></div>
+      <button class="ghost-btn" id="viewPin">置顶</button>
+      <button class="btn-primary" id="viewEdit">编辑</button>
+    </footer>
+  </article>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
